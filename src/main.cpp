@@ -27,7 +27,7 @@
 #define SENS_THRESHOLD  600
 
 #define LED_COUNT 74
-#define LED_RUN_DELAY_ms 2000000
+#define LED_RUN_DELAY_ms 20000
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
