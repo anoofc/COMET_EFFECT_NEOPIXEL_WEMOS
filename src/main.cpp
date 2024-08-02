@@ -1,7 +1,7 @@
-// UNDER DEVELOPMENT
-// NOT FINALIZED
-
-// Last updated: 02-08-2024 04:28 PM
+// Created: 01-08-2024 12:00 PM
+// Project: LED Comet with Sound Sensor
+// Description: A program to create a comet effect on an LED strip with a sound sensor
+// Last updated: 02-08-2024 7:00 PM
 // Author: ANOOF CHAPPANGATHIL
 // DEADLINE : 04-08-2024 11:59 PM
 
