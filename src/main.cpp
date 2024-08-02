@@ -94,34 +94,6 @@ void updateComets() {
 }
 
 
-// void updateComets() {
-//     if (millis() - lastUpdateTimeDelay < DELAY_MS) {        // Check for delay between updates
-//         return;                                             // If delay is not over, return
-//     }
-//     lastUpdateTimeDelay = millis();                         // Update the last update time
-//     // Clear all pixels
-//     for (int i = 0; i < LED_COUNT; i++) {                   // Loop through all pixels
-//         led_strip.setPixelColor(i, 0, 0, 0);                // Set the pixel color to black
-//     }
-
-//     // Update each active comet
-//     for (int i = 0; i < MAX_COMETS; i++) {                  // Loop through the comets array
-//         if (comets[i].active) {                             // Check if the comet is active
-//             for (int j = 0; j < COMET_SIZE; j++) {          // Loop through the comet size
-//                 int pos = comets[i].position - j;           // Calculate the position of the comet
-//                 if (pos >= 0 && pos < LED_COUNT) {          // Check if the position is within the LED strip
-//                     led_strip.setPixelColor(pos, comets[i].r, comets[i].g, comets[i].b);    // Set the pixel color
-//                 }
-//             }
-//             comets[i].position++;                                   // Update the position of the comet
-//             if (comets[i].position - COMET_SIZE >= LED_COUNT) {     // Check if the comet has reached the end of the strip
-//                 comets[i].active = false;                           // Deactivate the comet
-//             }
-//         }
-//     }
-    
-//     led_strip.show();                                               // Show the updated strip
-// }
 void setup() {
     Serial.begin(9600);                         // Initialize serial communication
     
