@@ -1,174 +1,148 @@
 // UNDER DEVELOPMENT
 // NOT FINALIZED
 
-// Last updated: 01-08-2024 06:53 PM
+// Last updated: 02-08-2024 04:28 PM
 // Author: ANOOF CHAPPANGATHIL
 // DEADLINE : 04-08-2024 11:59 PM
 
 
 #define DEBUG 1
-
-#define RED 255,0,0
-#define GREEN 0,255,0
-#define BLUE 0,0,255
-#define WHITE 255,255,255
-#define YELLOW 255,255,0
-#define CYAN 0,255,255
-#define ORANGE 255,125,0
-#define PINK 255,0,125
-#define TURQUOISE 0,255,125
-#define LIME 125,255,0
-#define MAGENTA 255,0,255
-#define INDIGO 0,125,255
+// Define the LED strip parameters
+#define LED_PIN    D4       // Digital pin for the LED strip
+#define LED_COUNT  80       // Number of LEDs in the strip
+#define COMET_SIZE 8        // Number of pixels in a comet
+#define BR_FACTOR  3.0      // Brightness factor for comets
+#define DELAY_MS   20       // Delay between updates
+#define MAX_COMETS 15        // Maximum number of comets
+#define SENSOR_PIN A0       // Analog pin for the sensor
+#define SENS_THRESHOLD 500  // Threshold for sensor activation
+#define DEBOUNCE_DELAY 100  // Delay between sensor activations
 
 
-#define SENSOR_PIN      A0
-#define LED_PIN         D4
-#define SENS_THRESHOLD  600
-
-#define LED_COUNT 74
-#define LED_RUN_DELAY_ms 20000
-
-#include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <Arduino.h>
 
-struct RGB {
-    int r, g, b;
+Adafruit_NeoPixel led_strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);  // Initialize the LED strip
+uint32_t lastUpdateTime = 0;        // Last time the strip was updated
+uint32_t lastUpdateTimeDelay = 0;   // Last time the sensor was read
+
+// Define the comet structure
+struct Comet {
+    int position;       // Position of the comet
+    uint8_t r, g, b;    // Color of the comet
+    bool active;        // Whether the comet is active
 };
 
+Comet comets[MAX_COMETS];   // Array of comets
 
-RGB colors[] = {
-        {RED},
-        {GREEN},
-        {BLUE},
-        {WHITE},
-        {YELLOW},
-        {CYAN},
-        {ORANGE},
-        {PINK},
-        {TURQUOISE},
-        {LIME},
-        {MAGENTA},
-        {INDIGO}
-    };
+// Read the sensor and activate a comet if the sensor value is above the threshold
+void readSensor() {     
+    int sensorValue = analogRead(SENSOR_PIN);   // Read the sensor value
+    if (DEBUG) { Serial.println("Sensor value: " + String(sensorValue)); } // if debug is enabled, print the sensor value
+    if (sensorValue > SENS_THRESHOLD) {         // If the sensor value is above the threshold
+        if (millis() - lastUpdateTime < DEBOUNCE_DELAY) {   // Check for debounce delay
+            return;                                         // If debounce delay is not over, return
+        }
+        lastUpdateTime = millis();                          // Update the last update time
+        for (int i = 0; i < MAX_COMETS; i++) {              // Loop through the comets array
+            if (!comets[i].active) {                        // Find an inactive comet
+                comets[i].position = 0;                     // Set the position of the comet
+                comets[i].r = random(0, 256);               // Set the color of the comet
+                comets[i].g = random(0, 256);               // Set the color of the comet
+                comets[i].b = random(0, 256);               // Set the color of the comet
+                comets[i].active = true;                    // Activate the comet
+                break;                                      // Exit the loop
+            }
+            
+        }
+    }
+}
 
-Adafruit_NeoPixel led_strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+void updateComets() {
+    if (millis() - lastUpdateTimeDelay < DELAY_MS) {        // Check for delay between updates
+        return;                                             // If delay is not over, return
+    }
+    lastUpdateTimeDelay = millis();                         // Update the last update time
 
-uint16_t sensorValue = 0;
-uint32_t lastUpdateTime = 0;
-uint8_t colorIndex;
+    // Clear all pixels
+    for (int i = 0; i < LED_COUNT; i++) {                   // Loop through all pixels
+        led_strip.setPixelColor(i, 0, 0, 0);                // Set the pixel color to black
+    }
+
+    // Update each active comet
+    for (int i = 0; i < MAX_COMETS; i++) {                  // Loop through the comets array
+        if (comets[i].active) {                             // Check if the comet is active
+            for (int j = 0; j < COMET_SIZE; j++) {          // Loop through the comet size
+                int pos = comets[i].position - j;           // Calculate the position of the comet
+                if (pos >= 0 && pos < LED_COUNT) {          // Check if the position is within the LED strip
+                    // Calculate brightness factor
+                    float brightnessFactor = pow(1.0 - static_cast<float>(j) / COMET_SIZE, BR_FACTOR);   // Calculate the brightness factor
+                    uint8_t r = comets[i].r * brightnessFactor;
+                    uint8_t g = comets[i].g * brightnessFactor;
+                    uint8_t b = comets[i].b * brightnessFactor;
+                    led_strip.setPixelColor(pos, r, g, b);  // Set the pixel color with adjusted brightness
+                }
+            }
+            comets[i].position++;                                   // Update the position of the comet
+            if (comets[i].position - COMET_SIZE >= LED_COUNT) {     // Check if the comet has reached the end of the strip
+                comets[i].active = false;                           // Deactivate the comet
+            }
+        }
+    }
+    
+    led_strip.show();                                               // Show the updated strip
+}
 
 
-// void neopixel (uint8_t r, uint8_t g, uint8_t b) {
-//   for (int i = 0; i < led_strip.numPixels(); i++) {
-//     if (micros() - lastUpdateTime < LED_RUN_DELAY_ms) {
-//       return;
+// void updateComets() {
+//     if (millis() - lastUpdateTimeDelay < DELAY_MS) {        // Check for delay between updates
+//         return;                                             // If delay is not over, return
 //     }
-//     int8_t j = i+1;
-//     int8_t k = i-2;
-//     led_strip.setPixelColor(i, r, g, b);
-//     led_strip.show();
-//   }
-  
+//     lastUpdateTimeDelay = millis();                         // Update the last update time
+//     // Clear all pixels
+//     for (int i = 0; i < LED_COUNT; i++) {                   // Loop through all pixels
+//         led_strip.setPixelColor(i, 0, 0, 0);                // Set the pixel color to black
+//     }
+
+//     // Update each active comet
+//     for (int i = 0; i < MAX_COMETS; i++) {                  // Loop through the comets array
+//         if (comets[i].active) {                             // Check if the comet is active
+//             for (int j = 0; j < COMET_SIZE; j++) {          // Loop through the comet size
+//                 int pos = comets[i].position - j;           // Calculate the position of the comet
+//                 if (pos >= 0 && pos < LED_COUNT) {          // Check if the position is within the LED strip
+//                     led_strip.setPixelColor(pos, comets[i].r, comets[i].g, comets[i].b);    // Set the pixel color
+//                 }
+//             }
+//             comets[i].position++;                                   // Update the position of the comet
+//             if (comets[i].position - COMET_SIZE >= LED_COUNT) {     // Check if the comet has reached the end of the strip
+//                 comets[i].active = false;                           // Deactivate the comet
+//             }
+//         }
+//     }
+    
+//     led_strip.show();                                               // Show the updated strip
 // }
-
-#define COMET_SIZE 5
-#define DELAY_MS   50
-
-uint32_t current_led_number_1 = 0;
-
-uint32_t last_updated_time_for_strip_1 = 0;
-
-#define NUMBER_OF_ON_LED_FOR_STRIP_1 4
-#define NUMBER_OF_OFF_LED_FOR_STRIP_1 8
-#define TIME_DELAY_FOR_RUNNING_SPEED_FOR_STRIP_1_IN_us 70000
-
-void sun_run_led(uint8_t r, uint8_t g, uint8_t b)
-{
-  if (micros() - last_updated_time_for_strip_1 < TIME_DELAY_FOR_RUNNING_SPEED_FOR_STRIP_1_IN_us) {
-    return;
-  }
-  if (current_led_number_1 < (LED_COUNT + NUMBER_OF_ON_LED_FOR_STRIP_1)) {
-    current_led_number_1 += 1;
-  } else {
-    current_led_number_1 = (LED_COUNT + NUMBER_OF_ON_LED_FOR_STRIP_1) - (NUMBER_OF_ON_LED_FOR_STRIP_1 + NUMBER_OF_OFF_LED_FOR_STRIP_1 - 1);
-  }
-  for (uint16_t k = 1; k <= current_led_number_1; k++) {
-    led_strip.setPixelColor(k, led_strip.Color(0, 0, 0));
-  }
-  for (int32_t j = current_led_number_1; j > 0; j -= (NUMBER_OF_ON_LED_FOR_STRIP_1 + NUMBER_OF_OFF_LED_FOR_STRIP_1))
-  {
-    for (int32_t i = j; i > (j - NUMBER_OF_ON_LED_FOR_STRIP_1); i--)
-    {
-      uint16_t m = i; if (m < 1) {
-        m = 1;
-      }
-            uint8_t red = map(m,j,(j- NUMBER_OF_ON_LED_FOR_STRIP_1),r,0);
-            uint8_t green = map(m,j,(j- NUMBER_OF_ON_LED_FOR_STRIP_1),g,0);
-            uint8_t blue = map(m,j,(j- NUMBER_OF_ON_LED_FOR_STRIP_1),b,0);
-      led_strip.setPixelColor(m, led_strip.Color(r, g, b));
-    }
-  }
-  led_strip.show();
-  last_updated_time_for_strip_1 = micros();
-}
-
-
-void cometEffect(uint8_t r, uint8_t g, uint8_t b) {
-  if (micros() - lastUpdateTime < LED_RUN_DELAY_ms) {
-      return;
-    }
-  lastUpdateTime = micros();
-  for (int i = 0; i < led_strip.numPixels() + COMET_SIZE; i++) {
-    
-    
-      // Clear all pixels
-      for (int j = 0; j < led_strip.numPixels(); j++) {
-          led_strip.setPixelColor(j, 0, 0, 0);
-      }
-
-      // Set comet pixels
-      for (int j = 0; j < COMET_SIZE; j++) {
-          if ((i - j) >= 0 && (i - j) < led_strip.numPixels()) {
-              led_strip.setPixelColor(i - j, r, g, b);
-              delay(DELAY_MS);
-          }
-      }
-
-      // Show the updated strip
-      led_strip.show();
-      
-  }
-}
-
-void selectColor() {
-  colorIndex = random(0, sizeof(colors) / sizeof(colors[0]));
-  if (DEBUG) { Serial.println("Color index: " + String(colorIndex));}
-}
-
-void readSensor() {
-  sensorValue = analogRead(SENSOR_PIN);
-  if (DEBUG) { Serial.println("Sensor value: " + String(sensorValue));}
-  if (sensorValue > SENS_THRESHOLD) {
-    selectColor();
-    // neopixel(colors[colorIndex].r, colors[colorIndex].g, colors[colorIndex].b);
-    // cometEffect(colors[colorIndex].r, colors[colorIndex].g, colors[colorIndex].b);
-    sun_run_led(colors[colorIndex].r, colors[colorIndex].g, colors[colorIndex].b);
-    // to do
-  } 
-}
-
-
 void setup() {
-  Serial.begin(9600);
-  led_strip.begin();
-  led_strip.clear();
-  led_strip.show();
+    Serial.begin(9600);                         // Initialize serial communication
+    
+    led_strip.begin();                          // Initialize the LED strip
+    led_strip.show();                           // Initialize all pixels to 'off'
+    // randomSeed(analogRead(A0)); // Seed the random number generator
+
+    // Initialize comets
+    for (int i = 0; i < MAX_COMETS; i++) {          // Loop through the comets array
+        comets[i].active = false;                   // Set the comet as inactive
+    }
 
 }
 
 void loop() {
-  readSensor();
-  if (DEBUG) { Serial.println("Looping...");}
-
+    if (millis() - lastUpdateTimeDelay < DELAY_MS) {        // Check for delay between updates
+        return;                                             // If delay is not over, return
+    }
+    readSensor();                                           // Read the sensor
+    updateComets();                                         // Update the comets
+    lastUpdateTimeDelay = millis();                         // Update the last update time
+    // delay(DELAY_MS);                                         
 }
+
