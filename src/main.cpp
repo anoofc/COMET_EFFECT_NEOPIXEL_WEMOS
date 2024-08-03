@@ -49,9 +49,9 @@ void readSensor() {
         for (int i = 0; i < MAX_COMETS; i++) {              // Loop through the comets array
             if (!comets[i].active) {                        // Find an inactive comet
                 comets[i].position = 0;                     // Set the position of the comet
-                comets[i].r = random(0, 256);               // Set the color of the comet
-                comets[i].g = random(0, 256);               // Set the color of the comet
-                comets[i].b = random(0, 256);               // Set the color of the comet
+                comets[i].r = random(0, 255);               // Set the color of the comet
+                comets[i].g = random(0, 255);               // Set the color of the comet
+                comets[i].b = random(0, 255);               // Set the color of the comet
                 comets[i].active = true;                    // Activate the comet
                 break;                                      // Exit the loop
             }
