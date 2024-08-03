@@ -1,6 +1,13 @@
 // Created: 01-08-2024 12:00 PM
 // Project: LED Comet with Sound Sensor
 // Description: A program to create a comet effect on an LED strip with a sound sensor
+// HOW TO USE: 
+            // 1. Connect the sound sensor to the analog pin A0
+            // 2. Connect the LED strip to digital pin D4
+            // 3. Upload the code to the ESP8266 board
+            // 4. Open the serial monitor and set the sensor threshold by sending 'T' followed by the threshold value (e.g., T500)
+            // 5. The LED strip will display a comet effect when the sound sensor value is above the threshold
+            // 6. The comet effect will be displayed for a short duration after the sensor value goes above the threshold
 // Last updated: 02-08-2024 7:00 PM
 // Author: ANOOF CHAPPANGATHIL
 // DEADLINE : 04-08-2024 11:59 PM
@@ -13,7 +20,7 @@
 #define COMET_SIZE 5        // Number of pixels in a comet
 #define BR_FACTOR  3.0      // Brightness factor for comets
 #define DELAY_MS   50       // Delay between updates
-#define MAX_COMETS 15        // Maximum number of comets
+#define MAX_COMETS 15       // Maximum number of comets
 #define SENSOR_PIN A0       // Analog pin for the sensor
 // #define SENS_THRESHOLD 500  // Threshold for sensor activation
 #define DEBOUNCE_DELAY 100  // Delay between sensor activations
@@ -94,19 +101,17 @@ void updateComets() {
     
     led_strip.show();                                               // Show the updated strip
 }
-// READ SERIAL 
+// Read the serial input and update the sensor threshold
 void readSerial () {
-    if (Serial.available() > 0) {
-        String input = Serial.readStringUntil('\n');
-        input.trim();
-        if (input.startsWith("T")) {
-            String numberPart = input.substring(1);
-            uint16_t data = numberPart.toInt();
-            if (data > 0 && data < 1000) {
-                sens_threshold = data;
-                if (DEBUG) {
-                    Serial.println("Input Data: " + input + "\t Sensor Threshold: " + String(sens_threshold));
-                }
+    if (Serial.available() > 0) {                       // Check if there is serial input
+        String input = Serial.readStringUntil('\n');    // Read the serial input
+        input.trim();                                   // Remove leading and trailing whitespace
+        if (input.startsWith("T")) {                    // Check if the input starts with 'T'
+            String numberPart = input.substring(1);     // Extract the number part of the input
+            uint16_t data = numberPart.toInt();         // Convert the number part to an integer
+            if (data > 0 && data < 1000) {              // Check if the data is within the valid range
+                sens_threshold = data;                  // Update the sensor threshold
+                if (DEBUG) { Serial.println("Input Data: " + input + "\t Sensor Threshold: " + String(sens_threshold));}    // If debug is enabled, print the input data and sensor threshold
             }
         }
     }
@@ -135,6 +140,6 @@ void loop() {
     readSensor();                                           // Read the sensor
     updateComets();                                         // Update the comets
     lastUpdateTimeDelay = millis();                         // Update the last update time
-    // delay(DELAY_MS);                                         
+                                             
 }
 
