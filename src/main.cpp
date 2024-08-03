@@ -9,13 +9,13 @@
 #define DEBUG 0
 // Define the LED strip parameters
 #define LED_PIN    D4       // Digital pin for the LED strip
-#define LED_COUNT  80       // Number of LEDs in the strip
-#define COMET_SIZE 8        // Number of pixels in a comet
+#define LED_COUNT  30       // Number of LEDs in the strip
+#define COMET_SIZE 5        // Number of pixels in a comet
 #define BR_FACTOR  3.0      // Brightness factor for comets
-#define DELAY_MS   20       // Delay between updates
+#define DELAY_MS   50       // Delay between updates
 #define MAX_COMETS 15        // Maximum number of comets
 #define SENSOR_PIN A0       // Analog pin for the sensor
-#define SENS_THRESHOLD 500  // Threshold for sensor activation
+// #define SENS_THRESHOLD 500  // Threshold for sensor activation
 #define DEBOUNCE_DELAY 100  // Delay between sensor activations
 
 
@@ -23,6 +23,8 @@
 #include <Arduino.h>
 
 Adafruit_NeoPixel led_strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);  // Initialize the LED strip
+
+uint16_t sens_threshold = 500;     // Threshold for sensor activation
 uint32_t lastUpdateTime = 0;        // Last time the strip was updated
 uint32_t lastUpdateTimeDelay = 0;   // Last time the sensor was read
 
@@ -39,7 +41,7 @@ Comet comets[MAX_COMETS];   // Array of comets
 void readSensor() {     
     int sensorValue = analogRead(SENSOR_PIN);   // Read the sensor value
     if (DEBUG) { Serial.println("Sensor value: " + String(sensorValue)); } // if debug is enabled, print the sensor value
-    if (sensorValue > SENS_THRESHOLD) {         // If the sensor value is above the threshold
+    if (sensorValue > sens_threshold) {         // If the sensor value is above the threshold
         if (millis() - lastUpdateTime < DEBOUNCE_DELAY) {   // Check for debounce delay
             return;                                         // If debounce delay is not over, return
         }
@@ -93,8 +95,21 @@ void updateComets() {
     led_strip.show();                                               // Show the updated strip
 }
 // READ SERIAL 
-void readSerial (){
-    if 
+void readSerial () {
+    if (Serial.available() > 0) {
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        if (input.startsWith("T")) {
+            String numberPart = input.substring(1);
+            uint16_t data = numberPart.toInt();
+            if (data > 0 && data < 1000) {
+                sens_threshold = data;
+                if (DEBUG) {
+                    Serial.println("Input Data: " + input + "\t Sensor Threshold: " + String(sens_threshold));
+                }
+            }
+        }
+    }
 }
 
 
@@ -113,6 +128,7 @@ void setup() {
 }
 
 void loop() {
+    readSerial();                                           // Read the serial input
     if (millis() - lastUpdateTimeDelay < DELAY_MS) {        // Check for delay between updates
         return;                                             // If delay is not over, return
     }
