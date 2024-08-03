@@ -6,7 +6,7 @@
 // DEADLINE : 04-08-2024 11:59 PM
 
 
-#define DEBUG 1
+#define DEBUG 0
 // Define the LED strip parameters
 #define LED_PIN    D4       // Digital pin for the LED strip
 #define LED_COUNT  80       // Number of LEDs in the strip
@@ -91,6 +91,10 @@ void updateComets() {
     }
     
     led_strip.show();                                               // Show the updated strip
+}
+// READ SERIAL 
+void readSerial (){
+    if 
 }
 
 
