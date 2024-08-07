@@ -16,14 +16,14 @@
 #define DEBUG 0
 // Define the LED strip parameters
 #define LED_PIN    D4       // Digital pin for the LED strip
-#define LED_COUNT  30       // Number of LEDs in the strip
-#define COMET_SIZE 5        // Number of pixels in a comet
+#define LED_COUNT  100       // Number of LEDs in the strip
+#define COMET_SIZE 15        // Number of pixels in a comet
 #define BR_FACTOR  3.0      // Brightness factor for comets
-#define DELAY_MS   50       // Delay between updates
+#define DELAY_MS   20       // Delay between updates
 #define MAX_COMETS 15       // Maximum number of comets
 #define SENSOR_PIN A0       // Analog pin for the sensor
 // #define SENS_THRESHOLD 500  // Threshold for sensor activation
-#define DEBOUNCE_DELAY 100  // Delay between sensor activations
+#define DEBOUNCE_DELAY 300  // Delay between sensor activations
 
 
 #include <Adafruit_NeoPixel.h>
